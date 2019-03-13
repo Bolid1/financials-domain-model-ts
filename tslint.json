@@ -1,0 +1,26 @@
+{
+  "extends": "tslint:latest",
+  "rules": {
+    "curly": true,
+    "max-classes-per-file": [
+      true,
+      3
+    ],
+    "quotemark": [
+      true,
+      "single"
+    ],
+    "arrow-parens": [
+      true,
+      "ban-single-arg-parens"
+    ],
+    "no-implicit-dependencies": [
+      true,
+      "dev"
+    ],
+    "object-literal-sort-keys": false
+  },
+  "jsRules": {
+    "curly": true
+  }
+}

@@ -1,0 +1,9 @@
+.idea/
+node_modules/
+coverage/
+dist/
+src/
+tslint.json
+.gitignore
+.npmignore
+html-report
