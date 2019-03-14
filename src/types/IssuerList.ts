@@ -12,7 +12,7 @@ const IssuerList = types
         itemsPerPage: types.number,
         totalItemsChanged: types.boolean,
 
-        items: types.array(IssuerEntity),
+        items: types.map(IssuerEntity),
     })
     .views(
         self => ({
@@ -24,7 +24,7 @@ const IssuerList = types
     .actions(
         self => ({
             add(issuer: IIssuer) {
-                self.items.push(issuer);
+                self.items.put(issuer);
             },
 
             extractPageInfo(list: IssuersList) {
@@ -47,6 +47,19 @@ const IssuerList = types
                     bonds: [],
                 }));
             },
+
+            clear() {
+                while (self.loadedPages.length) {
+                    self.loadedPages.pop();
+                }
+
+                self.page = 0;
+                self.totalPages = 0;
+                self.totalItems = 0;
+                self.itemsPerPage = 0;
+                self.totalItemsChanged = false;
+                self.items.clear();
+            }
         }),
     )
     .actions(
@@ -78,8 +91,9 @@ const IssuerList = types
                 },
 
                 async fetch(query: IssuerListQueryParams = {}) {
-                    const list = await self.domain.client.fetchIssuers(query);
-                    self.parse(list);
+                    if (self.loadedPages.indexOf(query.page || 1) === -1) {
+                        self.parse(await self.domain.client.fetchIssuers(query));
+                    }
                 },
             }
         ))

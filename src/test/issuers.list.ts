@@ -312,8 +312,7 @@ test('fetch issuers list', async t => {
 
     await store.issuer.list.fetch({page: 3});
 
-    t.true(Array.isArray(store.issuer.list.items), 'got issuers array');
-    t.strictEquals(store.issuer.list.items.length, issuers._embedded.item.length, 'not missed any issuer');
+    t.strictEquals(store.issuer.list.items.size, issuers._embedded.item.length, 'not missed any issuer');
 
     store.issuer.list.items.forEach((item: IIssuerEntity) => {
         t.test('Check item ' + item.id, async t1 => {
@@ -380,4 +379,98 @@ test('fetch next', async t => {
 
         t.equals(list.loadedPages.join('.'), loadedPages.join('.'), 'loadedPages should be ' + loadedPages.join(', '));
     }
+});
+
+test('each item in list must exist as single instance', async t => {
+    const {store, clientMock, client} = initTests();
+    const issuersList = new IssuersList(client, new URI('/issuers?page=1'));
+    const issuersIds = [1, 2];
+
+    issuersList.prop('totalItems', 2);
+    issuersList.prop('itemsPerPage', 30);
+    issuersList.prop('items', issuersIds.map(id => {
+        const issuerModel = new IssuerModel(client);
+
+        issuerModel.prop('id', id);
+        issuerModel.prop('name', `issuer 1`);
+        issuerModel.prop('type', 1);
+
+        issuerModel.isLoaded = true;
+        issuerModel.onInitEnded();
+
+        return issuerModel;
+    }));
+    issuersList.isLoaded = true;
+    issuersList.onInitEnded();
+
+    const list = store.issuer.list;
+
+    const stub = clientMock.fetchIssuers.returns(Promise.resolve(issuersList));
+
+    const loadedPages = [1];
+
+    await list.fetch();
+    t.equals(list.loadedPages.join('.'), loadedPages.join('.'), 'loadedPages should be equal');
+    t.equals(list.items.size, issuersIds.length, 'Must load issuers');
+    list.items.forEach((issuer: IIssuerEntity) => {
+        t.true(issuersIds.indexOf(issuer.id) !== -1, `Issuer ${issuer.id} must exist in ids`);
+    });
+
+    await list.fetch();
+    t.equals(list.loadedPages.join('.'), loadedPages.join('.'), 'loadedPages should be equal');
+    t.equals(list.items.size, issuersIds.length, 'Issuers count does\'t changed');
+    list.items.forEach((issuer: IIssuerEntity) => {
+        t.true(issuersIds.indexOf(issuer.id) !== -1, `Issuer ${issuer.id} must exist in ids`);
+    });
+
+    t.true(stub.calledOnce, 'not load page twice');
+});
+
+test('clear', async t => {
+    const {store, clientMock, client} = initTests();
+    const issuersList = new IssuersList(client, new URI('/issuers?page=1'));
+    const issuersIds = [1, 2];
+
+    issuersList.prop('totalItems', 2);
+    issuersList.prop('itemsPerPage', 30);
+    issuersList.prop('items', issuersIds.map(id => {
+        const issuerModel = new IssuerModel(client);
+
+        issuerModel.prop('id', id);
+        issuerModel.prop('name', `issuer 1`);
+        issuerModel.prop('type', 1);
+
+        issuerModel.isLoaded = true;
+        issuerModel.onInitEnded();
+
+        return issuerModel;
+    }));
+    issuersList.isLoaded = true;
+    issuersList.onInitEnded();
+
+    const list = store.issuer.list;
+
+    const stub = clientMock.fetchIssuers.returns(Promise.resolve(issuersList));
+
+    const loadedPages = [1];
+
+    await list.fetch();
+    t.equals(list.loadedPages.join('.'), loadedPages.join('.'), 'loadedPages should be equal');
+    t.equals(list.items.size, issuersIds.length, 'Must load issuers');
+    list.items.forEach((issuer: IIssuerEntity) => {
+        t.true(issuersIds.indexOf(issuer.id) !== -1, `Issuer ${issuer.id} must exist in ids`);
+    });
+
+    list.clear();
+    t.equals(list.loadedPages.length, 0, 'loadedPages should be cleared');
+    t.equals(list.items.size, 0, 'Issuers should be cleared');
+
+    await list.fetch();
+    t.equals(list.loadedPages.join('.'), loadedPages.join('.'), 'loadedPages should be equal');
+    t.equals(list.items.size, issuersIds.length, 'Issuers count does\'t changed');
+    list.items.forEach((issuer: IIssuerEntity) => {
+        t.true(issuersIds.indexOf(issuer.id) !== -1, `Issuer ${issuer.id} must exist in ids`);
+    });
+
+    t.equal(stub.callCount, 2, 'Reloaded page after clean');
 });

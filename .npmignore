@@ -7,3 +7,4 @@ tslint.json
 .gitignore
 .npmignore
 html-report
+.yalc/

@@ -13,6 +13,7 @@
     "clean": "rimraf dist/",
     "compile": "tsc",
     "test": "tsc && tape dist/test/*.js | tap-spec",
+    "pub": "yalc publish",
     "preversion": "yarn lint && yarn clean && yarn compile",
     "prepublish": "yarn clean && yarn compile"
   },
