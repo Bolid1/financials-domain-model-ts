@@ -1,6 +1,8 @@
+import {AxiosError} from 'axios';
 import {IssuerListQueryParams, IssuerModel, IssuersList} from 'bolid1-financials-api-client-ts';
 import {getParent, Instance, SnapshotIn, SnapshotOut, types} from 'mobx-state-tree';
 import {IDomain, IIssuer, IIssuerEntity} from '..';
+import ErrorModel, {fromAxios, IErrorModel} from './ErrorModel';
 import IssuerEntity from './IssuerEntity';
 
 const IssuerList = types
@@ -15,6 +17,7 @@ const IssuerList = types
         items: types.map(IssuerEntity),
 
         loading: types.boolean,
+        error: types.maybe(ErrorModel),
     })
     .views(
         self => ({
@@ -80,9 +83,13 @@ const IssuerList = types
                 self.extractPageInfo(list);
             },
 
-            setLoading(loading) {
+            setLoading(loading: boolean) {
                 self.loading = Boolean(loading);
             },
+
+            setError(error?: IErrorModel) {
+                self.error = error || undefined;
+            }
         }),
     )
     .actions(
@@ -101,9 +108,16 @@ const IssuerList = types
                 },
 
                 async fetch(query: IssuerListQueryParams = {}) {
+                    self.setError();
                     if (self.loadedPages.indexOf(query.page || 1) === -1) {
                         self.setLoading(true);
-                        self.parse(await self.domain.client.fetchIssuers(query));
+                        try {
+                            self.parse(await self.domain.client.fetchIssuers(query));
+                        } catch (ex) {
+                            if (ex as AxiosError) {
+                                self.setError(fromAxios(ex));
+                            }
+                        }
                         self.setLoading(false);
                     }
                 },

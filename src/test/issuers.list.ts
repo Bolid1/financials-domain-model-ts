@@ -1,3 +1,4 @@
+import {AxiosError} from 'axios';
 import {Client, IssuerModel, IssuersList} from 'bolid1-financials-api-client-ts';
 import {URI} from 'hal-rest-client';
 import {createStubInstance, SinonStubbedInstance} from 'sinon';
@@ -529,4 +530,51 @@ test('loading', async t => {
     t.false(list.loading);
     await list.fetch();
     t.false(list.loading);
+});
+
+test('error handling', async t => {
+    const {store, clientMock, client} = initTests();
+    const list = store.issuer.list;
+    const message = 'message';
+    const error = new Error(message) as AxiosError;
+    error.config = {url: 'foo'};
+    error.response = {
+        data: 'Proxy error: Could not proxy request (ECONNREFUSED).',
+        status: 500,
+        statusText: 'Internal Server Error',
+        headers: {
+            date: 'Fri, 15 Mar 2019 19:33:54 GMT',
+        },
+        config: error.config,
+    };
+
+    clientMock.fetchIssuers.returns(Promise.reject(error));
+
+    await list.fetch();
+    t.true(Boolean(list.error), 'error must exist');
+    if (list.error) {
+        t.equals(list.error.status, error.response.status);
+        t.equals(list.error.statusText, error.response.statusText);
+        t.equals(list.error.message, error.response.data);
+    }
+
+    const issuersList = new IssuersList(client, new URI('/issuers?page=1'));
+
+    issuersList.prop('totalItems', 2);
+    issuersList.prop('itemsPerPage', 30);
+    issuersList.isLoaded = true;
+    issuersList.onInitEnded();
+
+    clientMock.fetchIssuers.returns(
+        Promise.resolve(issuersList)
+            .then(issuers => {
+                // Load in progress
+                t.true(list.loading);
+
+                return issuers;
+            })
+    );
+
+    await list.fetch();
+    t.false(Boolean(list.error), 'error must be empty');
 });
