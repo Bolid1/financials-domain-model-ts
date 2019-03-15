@@ -1,6 +1,6 @@
 import {IssuerListQueryParams, IssuerModel, IssuersList} from 'bolid1-financials-api-client-ts';
 import {getParent, Instance, SnapshotIn, SnapshotOut, types} from 'mobx-state-tree';
-import {IDomain, IIssuer} from '..';
+import {IDomain, IIssuer, IIssuerEntity} from '..';
 import IssuerEntity from './IssuerEntity';
 
 const IssuerList = types
@@ -13,11 +13,17 @@ const IssuerList = types
         totalItemsChanged: types.boolean,
 
         items: types.map(IssuerEntity),
+
+        loading: types.boolean,
     })
     .views(
         self => ({
             get domain(): IDomain {
                 return getParent(self, 2);
+            },
+
+            map(callbackfn: (value: IIssuerEntity, index: number, array: IIssuerEntity[]) => any[], thisArg?: any) {
+                return Array.from(self.items.values()).map(callbackfn, thisArg);
             },
         }),
     )
@@ -73,6 +79,10 @@ const IssuerList = types
 
                 self.extractPageInfo(list);
             },
+
+            setLoading(loading) {
+                self.loading = Boolean(loading);
+            },
         }),
     )
     .actions(
@@ -92,7 +102,9 @@ const IssuerList = types
 
                 async fetch(query: IssuerListQueryParams = {}) {
                     if (self.loadedPages.indexOf(query.page || 1) === -1) {
+                        self.setLoading(true);
                         self.parse(await self.domain.client.fetchIssuers(query));
+                        self.setLoading(false);
                     }
                 },
             }

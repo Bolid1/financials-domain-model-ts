@@ -18,6 +18,7 @@ export function getDefaults(args: ICreateDefaultArguments) {
                     itemsPerPage: 30,
                     totalItemsChanged: false,
                     items: {},
+                    loading: false,
                 },
             },
         },

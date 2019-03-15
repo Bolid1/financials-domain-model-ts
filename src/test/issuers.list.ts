@@ -474,3 +474,59 @@ test('clear', async t => {
 
     t.equal(stub.callCount, 2, 'Reloaded page after clean');
 });
+
+test('map', async t => {
+    const {store, clientMock, client} = initTests();
+    const issuersList = new IssuersList(client, new URI('/issuers?page=1'));
+    const issuersIds = [1, 2];
+
+    issuersList.prop('totalItems', 2);
+    issuersList.prop('itemsPerPage', 30);
+    issuersList.prop('items', issuersIds.map(id => {
+        const issuerModel = new IssuerModel(client);
+
+        issuerModel.prop('id', id);
+        issuerModel.prop('name', `issuer 1`);
+        issuerModel.prop('type', 1);
+
+        issuerModel.isLoaded = true;
+        issuerModel.onInitEnded();
+
+        return issuerModel;
+    }));
+    issuersList.isLoaded = true;
+    issuersList.onInitEnded();
+
+    const list = store.issuer.list;
+
+    clientMock.fetchIssuers.returns(Promise.resolve(issuersList));
+
+    await list.fetch();
+    t.deepEquals(list.map((issuer: IIssuerEntity) => issuer.id), issuersIds, 'must be mapped');
+});
+
+test('loading', async t => {
+    const {store, clientMock, client} = initTests();
+    const issuersList = new IssuersList(client, new URI('/issuers?page=1'));
+
+    issuersList.prop('totalItems', 2);
+    issuersList.prop('itemsPerPage', 30);
+    issuersList.isLoaded = true;
+    issuersList.onInitEnded();
+
+    const list = store.issuer.list;
+
+    clientMock.fetchIssuers.returns(
+        Promise.resolve(issuersList)
+            .then(issuers => {
+                // Load in progress
+                t.true(list.loading);
+
+                return issuers;
+            })
+    );
+
+    t.false(list.loading);
+    await list.fetch();
+    t.false(list.loading);
+});
