@@ -4,3 +4,4 @@ dist/
 coverage/
 html-report/
 .yalc/
+yalc.lock

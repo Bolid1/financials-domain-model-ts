@@ -1,10 +1,8 @@
+import {IAmortization, IBond, ICoupon, ICurrency, IIssuer} from 'bolid1-financials-api-client-ts';
+
 export * from './error/SubmissionError';
 
-export * from './interfaces/IAmortization';
-export * from './interfaces/IBond';
-export * from './interfaces/ICoupon';
-export * from './interfaces/ICurrency';
-export * from './interfaces/IIssuer';
+export {IAmortization, IBond, ICoupon, ICurrency, IIssuer};
 
 export * from './types/AmortizationEntity';
 export * from './types/BondEntity';
@@ -13,6 +11,5 @@ export * from './types/CurrencyEntity';
 export * from './types/Domain';
 export * from './types/IssuerDomain';
 export * from './types/IssuerEntity';
-export * from './types/IssuerList';
 
 export * from './store';

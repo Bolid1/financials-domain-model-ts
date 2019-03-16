@@ -20,6 +20,6 @@ export function fromAxios(error: AxiosError): IErrorModel {
     return {
         status: response ? response.status : Number(error.code || 0),
         statusText: response ? response.statusText : 'Unexpected error',
-        message: response ? response.data : (error.code || 'Something went wrong')
+        message: response ? response.data : (error.code || 'Something went wrong'),
     };
 }

@@ -13,7 +13,9 @@
     "clean": "rimraf dist/",
     "compile": "tsc",
     "test": "tsc && tape dist/test/*.js | tap-spec",
+    "pretest": "yarn clean",
     "pub": "yalc publish",
+    "link-client": "rimraf .yalc/bolid1-financials-api-client-ts/ && yalc link \"bolid1-financials-api-client-ts\"",
     "preversion": "yarn lint && yarn clean && yarn compile",
     "prepublish": "yarn clean && yarn compile"
   },

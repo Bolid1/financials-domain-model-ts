@@ -10,16 +10,14 @@ export function getDefaults(args: ICreateDefaultArguments) {
     return {
         snapshot: {
             issuer: {
-                list: {
-                    loadedPages: [],
-                    page: 0,
-                    totalPages: 0,
-                    totalItems: 0,
-                    itemsPerPage: 30,
-                    totalItemsChanged: false,
-                    items: {},
-                    loading: false,
-                },
+                loadedPages: [],
+                page: 0,
+                totalPages: 0,
+                totalItems: 0,
+                itemsPerPage: 30,
+                totalItemsChanged: false,
+                items: {},
+                loading: false,
             },
         },
         env: {
