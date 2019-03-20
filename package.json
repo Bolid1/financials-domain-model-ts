@@ -12,12 +12,14 @@
     "lint": "tslint \"src/**/*.ts\" --fix --project tsconfig.json",
     "clean": "rimraf dist/",
     "compile": "tsc",
-    "test": "tsc && tape dist/test/*.js | tap-spec",
-    "pretest": "yarn clean",
+    "pretest": "yarn clean && yarn lint && yarn compile",
+    "test": "tape dist/test/*.js | tap-spec",
     "pub": "yalc publish",
     "link-client": "rimraf .yalc/bolid1-financials-api-client-ts/ && yalc link \"bolid1-financials-api-client-ts\"",
     "preversion": "yarn lint && yarn clean && yarn compile",
-    "prepublish": "yarn clean && yarn compile"
+    "prepublish": "yarn clean && yarn compile",
+    "coverage": "tsc && istanbul cover node_modules/tape/bin/tape dist/test/*.js",
+    "postcoverage": "remap-istanbul -i coverage/coverage.json -o html-report -t html"
   },
   "dependencies": {
     "bolid1-financials-api-client-ts": "^0.1.0",
@@ -31,7 +33,9 @@
     "@types/tape-async": "^2.3.0",
     "axios": "^0.18.0",
     "hal-rest-client": "^0.5.0",
+    "istanbul": "^0.4.5",
     "mobx": "^5.9.0",
+    "remap-istanbul": "^0.13.0",
     "rimraf": "^2.6.3",
     "sinon": "^7.2.7",
     "tap-spec": "^5.0.0",

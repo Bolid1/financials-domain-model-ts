@@ -1,10 +1,14 @@
 import {Client} from 'bolid1-financials-api-client-ts';
 import {getEnv, Instance, SnapshotIn, SnapshotOut, types} from 'mobx-state-tree';
+import BondDomain from './BondDomain';
+import CurrencyDomain from './CurrencyDomain';
 import IssuerDomain from './IssuerDomain';
 
 const Domain = types
     .model('Domain', {
         issuer: IssuerDomain,
+        bond: BondDomain,
+        currency: CurrencyDomain,
     })
     .views(
         self => ({

@@ -1,16 +1,16 @@
 import {AxiosError} from 'axios';
-import {IIssuer, IIssuersListQueryParams, IssuerModel, IssuersList} from 'bolid1-financials-api-client-ts';
+import {BondModel, BondsList, IBond, IBondsListQueryParams} from 'bolid1-financials-api-client-ts';
 import {getParent, Instance, SnapshotIn, SnapshotOut, types} from 'mobx-state-tree';
+import BondEntity, {IBondEntity} from './BondEntity';
 import {IDomain} from './Domain';
 import ErrorModel, {fromAxios, IErrorModel} from './ErrorModel';
-import IssuerEntity, {IIssuerEntity} from './IssuerEntity';
 
-const IssuerDomain = types
-    .model('IssuerDomain', {
+const BondDomain = types
+    .model('BondDomain', {
         page: types.number,
         totalItems: types.number,
 
-        items: types.map(IssuerEntity),
+        items: types.map(BondEntity),
 
         loading: types.boolean,
         error: types.maybe(ErrorModel),
@@ -20,7 +20,7 @@ const IssuerDomain = types
                 return getParent(self);
             },
 
-            map(callbackfn: (value: IIssuerEntity, index: number, array: IIssuerEntity[]) => any[], thisArg?: any) {
+            map(callbackfn: (value: IBondEntity, index: number, array: IBondEntity[]) => any[], thisArg?: any) {
                 return Array.from(self.items.values()).map(callbackfn, thisArg);
             },
         }),
@@ -52,22 +52,28 @@ const IssuerDomain = types
     }))
     .actions(self => {
             // Work with items
-            function unSerialize(issuers: IssuerModel[]): IIssuerEntity[] {
-                return issuers.map(item => ({
-                    id: item.id,
+            function unSerialize(bonds: BondModel[]): IBondEntity[] {
+                return bonds.map(item => ({
+                    ISIN: item.ISIN,
+                    issuer: item.issuer.id,
+                    currency: item.currency.id,
                     name: item.name,
-                    type: item.type,
-                    bonds: [],
+                    offerEnd: item.offerEnd,
+                    maturity: item.maturity,
+                    faceValue: item.faceValue,
+                    quantity: item.quantity,
+                    amortizations: [],
+                    coupons: [],
                 }));
             }
 
-            function put(...issuers: IIssuer[]): void {
-                issuers.forEach(issuer => self.items.put(issuer));
+            function put(...bonds: IBond[]): void {
+                bonds.forEach(bond => self.items.put(bond));
             }
 
             return {
-                putItem(...issuers: IssuerModel[]): void {
-                    put(...unSerialize(issuers));
+                putItem(...bonds: BondModel[]): void {
+                    put(...unSerialize(bonds));
                 },
 
                 clear() {
@@ -80,12 +86,12 @@ const IssuerDomain = types
     )
     .actions(self => {
         // Work with list
-        function extractPageInfo(list: IssuersList) {
+        function extractPageInfo(list: BondsList) {
             self.setPage(list.page);
             self.setTotalItems(list.totalItems);
         }
 
-        function handleList(list: IssuersList) {
+        function handleList(list: BondsList) {
             if (list.items) {
                 self.putItem(...list.items);
             }
@@ -94,14 +100,14 @@ const IssuerDomain = types
         }
 
         return {
-            async fetch(query: IIssuersListQueryParams = {}) {
+            async fetch(query: IBondsListQueryParams = {}) {
                 const page = query.page || 1;
 
                 self.setError();
                 self.setLoading(true);
                 try {
-                    const issuersList = await self.domain.client.fetchIssuers({...query, page});
-                    handleList(issuersList);
+                    const bondsList = await self.domain.client.fetchBonds({...query, page});
+                    handleList(bondsList);
                 } catch (ex) {
                     self.handleError(ex);
                 }
@@ -110,7 +116,7 @@ const IssuerDomain = types
         };
     })
     .actions(self => ({
-            fetchNext(query: IIssuersListQueryParams = {}) {
+            fetchNext(query: IBondsListQueryParams = {}) {
                 const nextPage = self.page + 1;
 
                 return self.fetch({...query, page: nextPage});
@@ -119,13 +125,12 @@ const IssuerDomain = types
     )
     .actions(self => ({
         // Work with single item
-        async find(id: number) {
+        async find(ISIN: string) {
             self.setError();
-            // @ts-ignore FIXME: change typeof identifierNumber to number
-            if (!self.items.has(id)) {
+            if (!self.items.has(ISIN)) {
                 self.setLoading(true);
                 try {
-                    self.putItem(await self.domain.client.fetchIssuer(id));
+                    self.putItem(await self.domain.client.fetchBond(ISIN));
                 } catch (ex) {
                     self.handleError(ex);
                 }
@@ -133,11 +138,11 @@ const IssuerDomain = types
             }
         },
 
-        async save(issuer: IIssuer) {
+        async save(bond: IBond) {
             self.setError();
             self.setLoading(true);
             try {
-                self.putItem(await self.domain.client.saveIssuer(issuer));
+                self.putItem(await self.domain.client.saveBond(bond));
             } catch (ex) {
                 self.handleError(ex);
             }
@@ -146,8 +151,8 @@ const IssuerDomain = types
     }))
 ;
 
-export default IssuerDomain;
+export default BondDomain;
 
-export type IIssuerDomain = Instance<typeof IssuerDomain>;
-export type IIssuerDomainSnapshotIn = SnapshotIn<typeof IssuerDomain>;
-export type IIssuerDomainSnapshotOut = SnapshotOut<typeof IssuerDomain>;
+export type IBondDomain = Instance<typeof BondDomain>;
+export type IBondDomainSnapshotIn = SnapshotIn<typeof BondDomain>;
+export type IBondDomainSnapshotOut = SnapshotOut<typeof BondDomain>;

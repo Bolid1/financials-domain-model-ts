@@ -1,465 +1,110 @@
-import {AxiosError} from 'axios';
-import {Client, IssuerModel, IssuersList} from 'bolid1-financials-api-client-ts';
-import {URI} from 'hal-rest-client';
+import {IssuerModel, IssuersList} from 'bolid1-financials-api-client-ts';
 import * as test from 'tape-async';
-import {IIssuerEntity} from '../';
+import issuer from './samples/issuer';
+import issuers from './samples/issuers';
 import initTests from './utils/initTests';
+import {makeList, makeLists} from './utils/makeLists';
 
-function makeLists(client: Client): { maxPage: number, lists: IssuersList[] } {
-    const maxPage = 8;
-    const lists = new Array(maxPage);
+const basePath = '/issuers';
 
-    for (let page = 1; page <= maxPage; ++page) {
-        lists[page - 1] = new IssuersList(client, new URI('/issuers?page=' + page));
-        lists[page - 1].prop('totalItems', 30 * 8);
-        lists[page - 1].prop('itemsPerPage', 30);
-    }
+test('issuer.fetch() #Check if default page is 1', async t => {
+    const {store, clientMock, jsonParser} = initTests();
+    const issuersList = makeList(jsonParser, IssuersList, {basePath, page: 1});
 
-    for (let i = 0; i < maxPage; ++i) {
-        lists[i].prop('first', lists[0]);
-        lists[i].prop('last', lists[maxPage - 1]);
-        if (lists[i - 1]) {
-            lists[i].prop('prev', lists[i - 1]);
-        }
-        if (lists[i + 1]) {
-            lists[i].prop('next', lists[i + 1]);
-        }
-    }
+    clientMock.fetchIssuers
+        .withArgs({page: 1})
+        .returns(Promise.resolve(issuersList));
 
-    lists.forEach(l => {
-        l.isLoaded = true;
-        l.onInitEnded();
-    });
-
-    return {maxPage, lists};
-}
-
-test('fetch issuers list', async t => {
-    const {store, clientMock, client} = initTests();
-    const issuers = {
-        _links: {
-            self: {
-                href: '/issuers?page=3',
-            },
-            first: {
-                href: '/issuers?page=1',
-            },
-            last: {
-                href: '/issuers?page=8',
-            },
-            prev: {
-                href: '/issuers?page=2',
-            },
-            next: {
-                href: '/issuers?page=4',
-            },
-            item: [
-                {
-                    href: '/issuers/469',
-                },
-                {
-                    href: '/issuers/470',
-                },
-                {
-                    href: '/issuers/471',
-                },
-                {
-                    href: '/issuers/472',
-                },
-                {
-                    href: '/issuers/473',
-                },
-            ],
-        },
-        totalItems: 234,
-        itemsPerPage: 30,
-        _embedded: {
-            item: [
-                {
-                    _links: {
-                        self: {
-                            href: '/issuers/469',
-                        },
-                        bonds: [
-                            {
-                                href: '/bonds/SU52002RMFS1',
-                            },
-                            {
-                                href: '/bonds/SU52001RMFS3',
-                            },
-                            {
-                                href: '/bonds/SU46023RMFS6',
-                            },
-                        ],
-                    },
-                    id: 469,
-                    name: 'Министерство Финансов Российской Федерации',
-                    type: 1,
-                },
-                {
-                    _links: {
-                        self: {
-                            href: '/issuers/470',
-                        },
-                        bonds: [
-                            {
-                                href: '/bonds/RU000A1002Z3',
-                            },
-                            {
-                                href: '/bonds/RU000A1000P8',
-                            },
-                            {
-                                href: '/bonds/RU000A0ZZWR6',
-                            },
-                        ],
-                    },
-                    id: 470,
-                    name: 'Центральный Банк Российской Федерации',
-                    type: 1,
-                },
-                {
-                    _links: {
-                        self: {
-                            href: '/issuers/471',
-                        },
-                    },
-                    id: 471,
-                    name: 'РЖД',
-                    type: 3,
-                },
-                {
-                    _links: {
-                        self: {
-                            href: '/issuers/472',
-                        },
-                    },
-                    id: 472,
-                    name: 'Ижсталь',
-                    type: 3,
-                },
-                {
-                    _links: {
-                        self: {
-                            href: '/issuers/473',
-                        },
-                    },
-                    id: 473,
-                    name: 'Открытое акционерное общество Белон',
-                    type: 3,
-                },
-            ],
-        },
-    };
-
-    const issuersList = new IssuersList(client, new URI(issuers._links.self.href));
-
-    const links = [
-        'first',
-        'last',
-        'prev',
-        'next',
-    ];
-
-    links.forEach(link => {
-        issuersList.prop(link, new IssuersList(client, new URI(issuers._links[link].href)));
-    });
-
-    issuersList.prop('totalItems', issuers.totalItems);
-    issuersList.prop('itemsPerPage', issuers.itemsPerPage);
-
-    issuersList.prop('items', issuers._embedded.item.map(issuer => {
-        const issuerModel = new IssuerModel(client);
-
-        issuerModel.prop('id', issuer.id);
-        issuerModel.prop('name', issuer.name);
-        issuerModel.prop('type', issuer.type);
-
-        issuerModel.isLoaded = true;
-        issuerModel.onInitEnded();
-
-        return issuerModel;
-    }));
-
-    issuersList.isLoaded = true;
-    issuersList.onInitEnded();
-
-    clientMock
-        .fetchIssuers
-        .returns(Promise.resolve(issuersList))
-    ;
-
-    await store.issuer.fetch({page: 3});
-
-    t.strictEquals(store.issuer.items.size, issuers._embedded.item.length, 'not missed any issuer');
-
-    store.issuer.items.forEach((item: IIssuerEntity) => {
-        t.test('Check item ' + item.id, async t1 => {
-            const issuer = issuers._embedded.item.find(({id}) => id === item.id) || null;
-            t1.true(issuer !== null, 'issuer found by id');
-            if (issuer) {
-                t1.strictEqual(item.id, issuer.id, 'id should be equal');
-                t1.strictEqual(item.name, issuer.name, 'name should be equal');
-                t1.strictEqual(item.type, issuer.type, 'type should be equal');
-            }
-        });
-    });
-
-    t.equals(store.issuer.error, undefined, 'The error must be empty');
-    t.equals(store.issuer.loadedPages.join('.'), [3].join('.'), 'loadedPages should be equal');
-    t.strictEquals(store.issuer.page, 3, 'page should be equal');
-    t.strictEquals(store.issuer.totalPages, 8, 'totalPages should be equal');
-    t.strictEquals(store.issuer.totalItems, issuers.totalItems, 'totalItems should be equal');
-    t.strictEquals(store.issuer.itemsPerPage, issuers.itemsPerPage, 'itemsPerPage should be equal');
-    t.strictEquals(store.issuer.totalItemsChanged, false, 'totalItemsChanged should be equal');
+    await store.issuer.fetch();
+    t.equal(store.issuer.page, 1, 'issuer.fetch() must load the first page of issuers');
 });
 
-test('fetch all', async t => {
-    const {store, clientMock, client} = initTests();
-    const {lists} = makeLists(client);
+test('issuer.fetch() must parse all items', async t => {
+    const expectedItems = issuers._embedded.item;
 
-    clientMock
-        .fetchIssuers
-        .returns(Promise.resolve(lists[0]))
-    ;
-
-    await store.issuer.fetchAll();
-
-    const pageRange = lists.map((v, k) => (k + 1));
-    t.equals(store.issuer.error, undefined, 'The error must be empty');
-    t.equals(store.issuer.loadedPages.join('.'), pageRange.join('.'), 'loadedPages should be equal');
-});
-
-test('fetch next', async t => {
-    const {store, clientMock, client} = initTests();
-    const {maxPage, lists} = makeLists(client);
-
-    const list = store.issuer;
-
-    clientMock
-        .fetchIssuers
-        .returns(Promise.resolve(lists[0]))
-    ;
-
-    await list.fetch();
-    const loadedPages = [1];
-    t.equals(store.issuer.error, undefined, 'The error must be empty');
-    t.equals(list.loadedPages.join('.'), loadedPages.join('.'), 'loadedPages should be equal');
-
-    for (let page = 2; page < maxPage + 5; ++page) {
-        clientMock
-            .fetchIssuers
-            .withArgs({page: Math.min(page, maxPage)})
-            .returns(Promise.resolve(lists[page - 1]))
-        ;
-
-        await list.fetchNext();
-        if (page <= maxPage) {
-            loadedPages.push(page);
-        }
-
-        t.equals(list.loadedPages.join('.'), loadedPages.join('.'), 'loadedPages should be ' + loadedPages.join(', '));
-    }
-});
-
-test('each item in list must exist as single instance', async t => {
-    const {store, clientMock, client} = initTests();
-    const issuersList = new IssuersList(client, new URI('/issuers?page=1'));
-    const issuersIds = [1, 2];
-
-    issuersList.prop('totalItems', 2);
-    issuersList.prop('itemsPerPage', 30);
-    issuersList.prop('items', issuersIds.map(id => {
-        const issuerModel = new IssuerModel(client);
-
-        issuerModel.prop('id', id);
-        issuerModel.prop('name', `issuer 1`);
-        issuerModel.prop('type', 1);
-
-        issuerModel.isLoaded = true;
-        issuerModel.onInitEnded();
-
-        return issuerModel;
-    }));
-    issuersList.isLoaded = true;
-    issuersList.onInitEnded();
-
-    const list = store.issuer;
-
-    const stub = clientMock.fetchIssuers.returns(Promise.resolve(issuersList));
-
-    const loadedPages = [1];
-
-    await list.fetch();
-    t.equals(store.issuer.error, undefined, 'The error must be empty');
-    t.equals(list.loadedPages.join('.'), loadedPages.join('.'), 'loadedPages should be equal');
-    t.equals(list.items.size, issuersIds.length, 'Must load issuers');
-    list.items.forEach((issuer: IIssuerEntity) => {
-        t.true(issuersIds.indexOf(issuer.id) !== -1, `Issuer ${issuer.id} must exist in ids`);
+    const {store, clientMock, jsonParser} = initTests();
+    const issuersList = makeList(jsonParser, IssuersList, {
+        basePath,
+        item: expectedItems,
     });
-
-    await list.fetch();
-    t.equals(store.issuer.error, undefined, 'The error must be empty');
-    t.equals(list.loadedPages.join('.'), loadedPages.join('.'), 'loadedPages should be equal');
-    t.equals(list.items.size, issuersIds.length, 'Issuers count does\'t changed');
-    list.items.forEach((issuer: IIssuerEntity) => {
-        t.true(issuersIds.indexOf(issuer.id) !== -1, `Issuer ${issuer.id} must exist in ids`);
-    });
-
-    t.true(stub.calledOnce, 'not load page twice');
-});
-
-test('clear', async t => {
-    const {store, clientMock, client} = initTests();
-    const issuersList = new IssuersList(client, new URI('/issuers?page=1'));
-    const issuersIds = [1, 2];
-
-    issuersList.prop('totalItems', 2);
-    issuersList.prop('itemsPerPage', 30);
-    issuersList.prop('items', issuersIds.map(id => {
-        const issuerModel = new IssuerModel(client);
-
-        issuerModel.prop('id', id);
-        issuerModel.prop('name', `issuer 1`);
-        issuerModel.prop('type', 1);
-
-        issuerModel.isLoaded = true;
-        issuerModel.onInitEnded();
-
-        return issuerModel;
-    }));
-    issuersList.isLoaded = true;
-    issuersList.onInitEnded();
-
-    const list = store.issuer;
-
-    const stub = clientMock.fetchIssuers.returns(Promise.resolve(issuersList));
-
-    const loadedPages = [1];
-
-    await list.fetch();
-    t.equals(store.issuer.error, undefined, 'The error must be empty');
-    t.equals(list.loadedPages.join('.'), loadedPages.join('.'), 'loadedPages should be equal');
-    t.equals(list.items.size, issuersIds.length, 'Must load issuers');
-    list.items.forEach((issuer: IIssuerEntity) => {
-        t.true(issuersIds.indexOf(issuer.id) !== -1, `Issuer ${issuer.id} must exist in ids`);
-    });
-
-    list.clear();
-    t.equals(list.loadedPages.length, 0, 'loadedPages should be cleared');
-    t.equals(list.items.size, 0, 'Issuers should be cleared');
-
-    await list.fetch();
-    t.equals(store.issuer.error, undefined, 'The error must be empty');
-    t.equals(list.loadedPages.join('.'), loadedPages.join('.'), 'loadedPages should be equal');
-    t.equals(list.items.size, issuersIds.length, 'Issuers count does\'t changed');
-    list.items.forEach((issuer: IIssuerEntity) => {
-        t.true(issuersIds.indexOf(issuer.id) !== -1, `Issuer ${issuer.id} must exist in ids`);
-    });
-
-    t.equal(stub.callCount, 2, 'Reloaded page after clean');
-});
-
-test('map', async t => {
-    const {store, clientMock, client} = initTests();
-    const issuersList = new IssuersList(client, new URI('/issuers?page=1'));
-    const issuersIds = [1, 2];
-
-    issuersList.prop('totalItems', 2);
-    issuersList.prop('itemsPerPage', 30);
-    issuersList.prop('items', issuersIds.map(id => {
-        const issuerModel = new IssuerModel(client);
-
-        issuerModel.prop('id', id);
-        issuerModel.prop('name', `issuer 1`);
-        issuerModel.prop('type', 1);
-
-        issuerModel.isLoaded = true;
-        issuerModel.onInitEnded();
-
-        return issuerModel;
-    }));
-    issuersList.isLoaded = true;
-    issuersList.onInitEnded();
-
-    const list = store.issuer;
 
     clientMock.fetchIssuers.returns(Promise.resolve(issuersList));
 
-    await list.fetch();
-    t.equals(store.issuer.error, undefined, 'The error must be empty');
-    t.deepEquals(list.map((issuer: IIssuerEntity) => issuer.id), issuersIds, 'must be mapped');
+    await store.issuer.fetch();
+    t.equal(store.issuer.items.size, expectedItems.length, `issuer.items must contain all items from list`);
+    expectedItems.forEach(expected => {
+        const identifier = expected.id;
+        // @ts-ignore
+        const item = store.issuer.items.get(identifier);
+        t.notEqual(item, undefined, `issuer.items must contain expected with id = ${identifier}`);
+
+        if (!item) {
+            return;
+        }
+
+        Object.keys(expected).forEach(key => {
+            if (key !== '_links') {
+                const msg = `issuer.item[${identifier}].${key} should be equal to "${expected[key]}"`;
+                t.equal(item[key], expected[key], msg);
+            }
+        });
+    });
 });
 
-test('loading', async t => {
-    const {store, clientMock, client} = initTests();
-    const issuersList = new IssuersList(client, new URI('/issuers?page=1'));
+test('issuer.fetch() read totalItems from list', async t => {
+    const totalItems = 123456;
+    const {store, clientMock, jsonParser} = initTests();
+    const issuersList = makeList(jsonParser, IssuersList, {basePath, totalItems});
 
-    issuersList.prop('totalItems', 2);
-    issuersList.prop('itemsPerPage', 30);
-    issuersList.isLoaded = true;
-    issuersList.onInitEnded();
+    clientMock.fetchIssuers.returns(Promise.resolve(issuersList));
 
-    const list = store.issuer;
-
-    clientMock.fetchIssuers.returns(
-        Promise.resolve(issuersList)
-            .then(issuers => {
-                // Load in progress
-                t.true(list.loading);
-
-                return issuers;
-            }),
-    );
-
-    t.false(list.loading);
-    await list.fetch();
-    t.equals(store.issuer.error, undefined, 'The error must be empty');
-    t.false(list.loading);
+    await store.issuer.fetch();
+    t.equal(store.issuer.totalItems, totalItems, `issuer.totalItems should be equal to "${totalItems}"`);
 });
 
-test('error handling', async t => {
-    const {store, clientMock, client} = initTests();
-    const list = store.issuer;
-    const message = 'message';
-    const error = new Error(message) as AxiosError;
-    error.config = {url: 'foo'};
-    error.response = {
-        data: 'Proxy error: Could not proxy request (ECONNREFUSED).',
-        status: 500,
-        statusText: 'Internal Server Error',
-        headers: {
-            date: 'Fri, 15 Mar 2019 19:33:54 GMT',
-        },
-        config: error.config,
-    };
+test('issuer.fetchNext() will load next page each time', async t => {
+    const {store, clientMock, jsonParser} = initTests();
+    const lists = makeLists(jsonParser, IssuersList, basePath, 3);
 
-    clientMock.fetchIssuers.returns(Promise.reject(error));
+    lists.forEach(list => {
+        clientMock.fetchIssuers.withArgs({page: list.page}).returns(Promise.resolve(list));
+    });
 
-    await list.fetch();
-    t.true(Boolean(list.error), 'error must exist');
-    if (list.error) {
-        t.equals(list.error.status, error.response.status);
-        t.equals(list.error.statusText, error.response.statusText);
-        t.equals(list.error.message, error.response.data);
-    }
+    await store.issuer.fetchNext();
+    t.equal(store.issuer.page, lists[0].page, 'Firstly issuer.fetchNext() should load the first page');
 
-    const issuersList = new IssuersList(client, new URI('/issuers?page=1'));
+    await store.issuer.fetchNext();
+    t.equal(store.issuer.page, lists[1].page, 'Than issuer.fetchNext() should load page 2');
 
-    issuersList.prop('totalItems', 2);
-    issuersList.prop('itemsPerPage', 30);
-    issuersList.isLoaded = true;
-    issuersList.onInitEnded();
+    await store.issuer.fetchNext();
+    t.equal(store.issuer.page, lists[2].page, 'Finally issuer.fetchNext() should load the next page (3)');
+});
 
-    clientMock.fetchIssuers.returns(
-        Promise.resolve(issuersList)
-            .then(issuers => {
-                // Load in progress
-                t.true(list.loading);
+test('issuer.find() must fetch issuer by id, but only when it does not in collection', async t => {
+    const {store, clientMock, jsonParser} = initTests();
+    clientMock.fetchIssuer.withArgs(issuer.id).returns(Promise.resolve(jsonParser.jsonToResource(issuer, IssuerModel)));
 
-                return issuers;
-            }),
-    );
+    // @ts-ignore
+    t.false(store.issuer.items.has(issuer.id), 'issuer.items should not have item on test start');
 
-    await list.fetch();
-    t.false(Boolean(list.error), 'error must be empty');
+    await store.issuer.find(issuer.id);
+
+    // @ts-ignore
+    t.true(store.issuer.items.has(issuer.id), 'issuer.items should have item after fetch');
+
+    await store.issuer.find(issuer.id);
+    t.true(clientMock.fetchIssuer.calledOnce, 'fetchIssuer must be called only once');
+});
+
+test('issuer.save() must create issuer', async t => {
+    const {store, clientMock, jsonParser} = initTests();
+    clientMock.saveIssuer.withArgs(issuer).returns(Promise.resolve(jsonParser.jsonToResource(issuer, IssuerModel)));
+
+    // @ts-ignore
+    t.false(store.issuer.items.has(issuer.id), 'issuer.items should not have item on test start');
+
+    await store.issuer.save(issuer);
+
+    // @ts-ignore
+    t.true(store.issuer.items.has(issuer.id), 'issuer.items should have item after save');
 });

@@ -1,16 +1,16 @@
 import {AxiosError} from 'axios';
-import {IIssuer, IIssuersListQueryParams, IssuerModel, IssuersList} from 'bolid1-financials-api-client-ts';
+import {CurrenciesList, CurrencyModel, ICurrenciesListQueryParams, ICurrency} from 'bolid1-financials-api-client-ts';
 import {getParent, Instance, SnapshotIn, SnapshotOut, types} from 'mobx-state-tree';
+import CurrencyEntity, {ICurrencyEntity} from './CurrencyEntity';
 import {IDomain} from './Domain';
 import ErrorModel, {fromAxios, IErrorModel} from './ErrorModel';
-import IssuerEntity, {IIssuerEntity} from './IssuerEntity';
 
-const IssuerDomain = types
-    .model('IssuerDomain', {
+const CurrencyDomain = types
+    .model('CurrencyDomain', {
         page: types.number,
         totalItems: types.number,
 
-        items: types.map(IssuerEntity),
+        items: types.map(CurrencyEntity),
 
         loading: types.boolean,
         error: types.maybe(ErrorModel),
@@ -20,7 +20,7 @@ const IssuerDomain = types
                 return getParent(self);
             },
 
-            map(callbackfn: (value: IIssuerEntity, index: number, array: IIssuerEntity[]) => any[], thisArg?: any) {
+            map(callbackfn: (value: ICurrencyEntity, index: number, array: ICurrencyEntity[]) => any[], thisArg?: any) {
                 return Array.from(self.items.values()).map(callbackfn, thisArg);
             },
         }),
@@ -52,22 +52,20 @@ const IssuerDomain = types
     }))
     .actions(self => {
             // Work with items
-            function unSerialize(issuers: IssuerModel[]): IIssuerEntity[] {
-                return issuers.map(item => ({
+            function unSerialize(currencies: CurrencyModel[]): ICurrencyEntity[] {
+                return currencies.map(item => ({
                     id: item.id,
-                    name: item.name,
-                    type: item.type,
-                    bonds: [],
+                    sign: item.sign,
                 }));
             }
 
-            function put(...issuers: IIssuer[]): void {
-                issuers.forEach(issuer => self.items.put(issuer));
+            function put(...currencies: ICurrency[]): void {
+                currencies.forEach(currency => self.items.put(currency));
             }
 
             return {
-                putItem(...issuers: IssuerModel[]): void {
-                    put(...unSerialize(issuers));
+                putItem(...currencies: CurrencyModel[]): void {
+                    put(...unSerialize(currencies));
                 },
 
                 clear() {
@@ -80,12 +78,12 @@ const IssuerDomain = types
     )
     .actions(self => {
         // Work with list
-        function extractPageInfo(list: IssuersList) {
+        function extractPageInfo(list: CurrenciesList) {
             self.setPage(list.page);
             self.setTotalItems(list.totalItems);
         }
 
-        function handleList(list: IssuersList) {
+        function handleList(list: CurrenciesList) {
             if (list.items) {
                 self.putItem(...list.items);
             }
@@ -94,14 +92,14 @@ const IssuerDomain = types
         }
 
         return {
-            async fetch(query: IIssuersListQueryParams = {}) {
+            async fetch(query: ICurrenciesListQueryParams = {}) {
                 const page = query.page || 1;
 
                 self.setError();
                 self.setLoading(true);
                 try {
-                    const issuersList = await self.domain.client.fetchIssuers({...query, page});
-                    handleList(issuersList);
+                    const currenciesList = await self.domain.client.fetchCurrencies({...query, page});
+                    handleList(currenciesList);
                 } catch (ex) {
                     self.handleError(ex);
                 }
@@ -110,7 +108,7 @@ const IssuerDomain = types
         };
     })
     .actions(self => ({
-            fetchNext(query: IIssuersListQueryParams = {}) {
+            fetchNext(query: ICurrenciesListQueryParams = {}) {
                 const nextPage = self.page + 1;
 
                 return self.fetch({...query, page: nextPage});
@@ -119,13 +117,12 @@ const IssuerDomain = types
     )
     .actions(self => ({
         // Work with single item
-        async find(id: number) {
+        async find(id: string) {
             self.setError();
-            // @ts-ignore FIXME: change typeof identifierNumber to number
             if (!self.items.has(id)) {
                 self.setLoading(true);
                 try {
-                    self.putItem(await self.domain.client.fetchIssuer(id));
+                    self.putItem(await self.domain.client.fetchCurrency(id));
                 } catch (ex) {
                     self.handleError(ex);
                 }
@@ -133,11 +130,11 @@ const IssuerDomain = types
             }
         },
 
-        async save(issuer: IIssuer) {
+        async save(currency: ICurrency) {
             self.setError();
             self.setLoading(true);
             try {
-                self.putItem(await self.domain.client.saveIssuer(issuer));
+                self.putItem(await self.domain.client.saveCurrency(currency));
             } catch (ex) {
                 self.handleError(ex);
             }
@@ -146,8 +143,8 @@ const IssuerDomain = types
     }))
 ;
 
-export default IssuerDomain;
+export default CurrencyDomain;
 
-export type IIssuerDomain = Instance<typeof IssuerDomain>;
-export type IIssuerDomainSnapshotIn = SnapshotIn<typeof IssuerDomain>;
-export type IIssuerDomainSnapshotOut = SnapshotOut<typeof IssuerDomain>;
+export type ICurrencyDomain = Instance<typeof CurrencyDomain>;
+export type ICurrencyDomainSnapshotIn = SnapshotIn<typeof CurrencyDomain>;
+export type ICurrencyDomainSnapshotOut = SnapshotOut<typeof CurrencyDomain>;

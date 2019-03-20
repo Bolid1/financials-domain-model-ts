@@ -10,12 +10,20 @@ export function getDefaults(args: ICreateDefaultArguments) {
     return {
         snapshot: {
             issuer: {
-                loadedPages: [],
                 page: 0,
-                totalPages: 0,
                 totalItems: 0,
-                itemsPerPage: 30,
-                totalItemsChanged: false,
+                items: {},
+                loading: false,
+            },
+            bond: {
+                page: 0,
+                totalItems: 0,
+                items: {},
+                loading: false,
+            },
+            currency: {
+                page: 0,
+                totalItems: 0,
                 items: {},
                 loading: false,
             },
