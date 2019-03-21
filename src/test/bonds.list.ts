@@ -69,7 +69,7 @@ test('bond.fetch() read totalItems from list', async t => {
 
 test('bond.fetchNext() will load next page each time', async t => {
     const {store, clientMock, jsonParser} = initTests();
-    const lists = makeLists(jsonParser, BondsList, basePath, 3);
+    const lists = makeLists(jsonParser, BondsList, basePath, 3) as BondsList[];
 
     lists.forEach(list => {
         clientMock.fetchBonds.withArgs({page: list.page}).returns(Promise.resolve(list));
@@ -122,7 +122,7 @@ test('bond.map() must map bond.items', async t => {
     const bondsList = makeList(jsonParser, BondsList, {
         basePath,
         item: expectedItems,
-    });
+    }) as BondsList;
 
     await store.bond.putItem(...bondsList.items as BondModel[]);
 

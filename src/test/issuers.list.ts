@@ -64,7 +64,7 @@ test('issuer.fetch() read totalItems from list', async t => {
 
 test('issuer.fetchNext() will load next page each time', async t => {
     const {store, clientMock, jsonParser} = initTests();
-    const lists = makeLists(jsonParser, IssuersList, basePath, 3);
+    const lists = makeLists(jsonParser, IssuersList, basePath, 3) as IssuersList[];
 
     lists.forEach(list => {
         clientMock.fetchIssuers.withArgs({page: list.page}).returns(Promise.resolve(list));
@@ -116,7 +116,7 @@ test('issuer.map() must map issuer.items', async t => {
     const issuersList = makeList(jsonParser, IssuersList, {
         basePath,
         item: expectedItems,
-    });
+    }) as IssuersList;
 
     await store.issuer.putItem(...issuersList.items as IssuerModel[]);
 

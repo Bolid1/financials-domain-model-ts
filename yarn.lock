@@ -168,10 +168,10 @@ balanced-match@^1.0.0:
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.0.tgz#89b4d199ab2bee49de164ea02b89ce462d71b767"
   integrity sha1-ibTRmasr7kneFk6gK4nORi1xt2c=
 
-bolid1-financials-api-client-ts@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/bolid1-financials-api-client-ts/-/bolid1-financials-api-client-ts-0.1.0.tgz#c7e3dd8df29af95001af5f851c6bbfc2cd500efb"
-  integrity sha512-xN/DZNkfFCTOstGnGv4IdIJzcgus+l1SwM5HExgoItiycjaEHnOqxchnqjivHYuzl0zDvLBhFKG00S4lbvlHtA==
+bolid1-financials-api-client-ts@^0.4.2:
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/bolid1-financials-api-client-ts/-/bolid1-financials-api-client-ts-0.4.2.tgz#7413ee3de2e40e919a9e675ad81e63cb45755af6"
+  integrity sha512-THcFjEitou5GrqVnsnT24jS+dHM0cs/4FkF6Rpe6u4Fdv88uCsjI1Bu8MunVk5lwkhvpHz1nDBFrBOIjzh3ohg==
   dependencies:
     hal-rest-client "^0.5.0"
 

@@ -64,7 +64,7 @@ test('currency.fetch() read totalItems from list', async t => {
 
 test('currency.fetchNext() will load next page each time', async t => {
     const {store, clientMock, jsonParser} = initTests();
-    const lists = makeLists(jsonParser, CurrenciesList, basePath, 3);
+    const lists = makeLists(jsonParser, CurrenciesList, basePath, 3) as CurrenciesList[];
 
     lists.forEach(list => {
         clientMock.fetchCurrencies.withArgs({page: list.page}).returns(Promise.resolve(list));
@@ -120,7 +120,7 @@ test('currency.map() must map currency.items', async t => {
     const currenciesList = makeList(jsonParser, CurrenciesList, {
         basePath,
         item: expectedItems,
-    });
+    }) as CurrenciesList;
 
     await store.currency.putItem(...currenciesList.items as CurrencyModel[]);
 
