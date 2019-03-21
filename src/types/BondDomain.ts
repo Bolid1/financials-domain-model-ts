@@ -20,7 +20,10 @@ const BondDomain = types
                 return getParent(self);
             },
 
-            map(callbackfn: (value: IBondEntity, index: number, array: IBondEntity[]) => any[], thisArg?: any) {
+        map(callbackfn: (
+            value: IBondEntity, index: number, array: IBondEntity[]) => any,
+            thisArg?: any,
+        ): any[] {
                 return Array.from(self.items.values()).map(callbackfn, thisArg);
             },
         }),

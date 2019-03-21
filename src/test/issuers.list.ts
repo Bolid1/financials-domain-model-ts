@@ -108,3 +108,21 @@ test('issuer.save() must create issuer', async t => {
     // @ts-ignore
     t.true(store.issuer.items.has(issuer.id), 'issuer.items should have item after save');
 });
+
+test('issuer.map() must map issuer.items', async t => {
+    const expectedItems = issuers._embedded.item;
+
+    const {store, jsonParser} = initTests();
+    const issuersList = makeList(jsonParser, IssuersList, {
+        basePath,
+        item: expectedItems,
+    });
+
+    await store.issuer.putItem(...issuersList.items as IssuerModel[]);
+
+    t.deepEqual(
+        store.issuer.map(item => item.id),
+        expectedItems.map(item => item.id),
+        'issuer.map() should produce issuer identifier',
+    );
+});

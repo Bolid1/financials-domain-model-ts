@@ -20,7 +20,10 @@ const CurrencyDomain = types
                 return getParent(self);
             },
 
-            map(callbackfn: (value: ICurrencyEntity, index: number, array: ICurrencyEntity[]) => any[], thisArg?: any) {
+        map(callbackfn: (
+            value: ICurrencyEntity, index: number, array: ICurrencyEntity[]) => any,
+            thisArg?: any,
+        ): any[] {
                 return Array.from(self.items.values()).map(callbackfn, thisArg);
             },
         }),

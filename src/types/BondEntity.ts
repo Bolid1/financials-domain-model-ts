@@ -10,7 +10,7 @@ const BondEntity = types
         issuer: types.safeReference(IssuerEntity),
         currency: types.safeReference(CurrencyEntity),
         name: types.string,
-            offerEnd: types.maybeNull(types.Date),
+        offerEnd: types.maybeNull(types.Date),
         maturity: types.Date,
         faceValue: types.number,
         quantity: types.number,

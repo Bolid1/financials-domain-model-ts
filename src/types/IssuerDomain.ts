@@ -20,7 +20,10 @@ const IssuerDomain = types
                 return getParent(self);
             },
 
-            map(callbackfn: (value: IIssuerEntity, index: number, array: IIssuerEntity[]) => any[], thisArg?: any) {
+        map(
+            callbackfn: (value: IIssuerEntity, index: number, array: IIssuerEntity[]) => any,
+            thisArg?: any,
+        ): any[] {
                 return Array.from(self.items.values()).map(callbackfn, thisArg);
             },
         }),
