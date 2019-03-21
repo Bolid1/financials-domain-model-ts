@@ -1,6 +1,6 @@
 {
   "name": "bolid1-financials-domain-model-ts",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Domain model of financials application connected to API",
   "main": "dist/index.js",
   "typings": "dist/index",
