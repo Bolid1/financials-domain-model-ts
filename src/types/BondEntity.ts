@@ -7,8 +7,8 @@ import IssuerEntity from './IssuerEntity';
 const BondEntity = types
     .model('BondEntity', {
         ISIN: types.identifier,
-        issuer: types.safeReference(IssuerEntity),
-        currency: types.safeReference(CurrencyEntity),
+            issuer: types.safeReference(types.late(() => IssuerEntity)),
+            currency: types.safeReference(types.late(() => CurrencyEntity)),
         name: types.string,
         offerEnd: types.maybeNull(types.Date),
         maturity: types.Date,

@@ -70,7 +70,7 @@ const IssuerDomain = types
 
             return {
                 putItem(...issuers: IssuerModel[]): void {
-                    put(...unSerialize(issuers));
+                    put(...unSerialize(issuers.filter(item => item)));
                 },
 
                 clear() {

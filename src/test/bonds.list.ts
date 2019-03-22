@@ -26,7 +26,7 @@ test('bond.fetch() must parse all items', async t => {
     const bondsList = makeList(jsonParser, BondsList, {
         basePath,
         item: expectedItems,
-    });
+    }) as BondsList;
 
     clientMock.fetchBonds.returns(Promise.resolve(bondsList));
 
@@ -34,7 +34,6 @@ test('bond.fetch() must parse all items', async t => {
     t.equal(store.bond.items.size, expectedItems.length, `bond.items must contain all items from list`);
     expectedItems.forEach(expected => {
         const identifier = expected.ISIN;
-        // @ts-ignore
         const item = store.bond.items.get(identifier);
         t.notEqual(item, undefined, `bond.items must contain expected with id = ${identifier}`);
 
@@ -89,12 +88,10 @@ test('bond.find() must fetch bond by id, but only when it does not in collection
     const {store, clientMock, jsonParser} = initTests();
     clientMock.fetchBond.withArgs(bond.ISIN).returns(Promise.resolve(jsonParser.jsonToResource(bond, BondModel)));
 
-    // @ts-ignore
     t.false(store.bond.items.has(bond.ISIN), 'bond.items should not have item on test start');
 
     await store.bond.find(bond.ISIN);
 
-    // @ts-ignore
     t.true(store.bond.items.has(bond.ISIN), 'bond.items should have item after fetch');
 
     await store.bond.find(bond.ISIN);
@@ -106,12 +103,10 @@ test('bond.save() must create bond', async t => {
     const toSave = {...bond, maturity: new Date(bond.maturity)};
     clientMock.saveBond.withArgs(toSave).returns(Promise.resolve(jsonParser.jsonToResource(bond, BondModel)));
 
-    // @ts-ignore
     t.false(store.bond.items.has(bond.ISIN), 'bond.items should not have item on test start');
 
     await store.bond.save(toSave);
 
-    // @ts-ignore
     t.true(store.bond.items.has(bond.ISIN), 'bond.items should have item after save');
 });
 

@@ -20,8 +20,8 @@ const BondDomain = types
                 return getParent(self);
             },
 
-        map(callbackfn: (
-            value: IBondEntity, index: number, array: IBondEntity[]) => any,
+        map(
+            callbackfn: (value: IBondEntity, index: number, array: IBondEntity[]) => any,
             thisArg?: any,
         ): any[] {
                 return Array.from(self.items.values()).map(callbackfn, thisArg);
@@ -52,10 +52,21 @@ const BondDomain = types
                 throw ex;
             }
         },
+
+        put(...bonds: IBond[]): void {
+            bonds.forEach(bond => self.items.put(bond));
+        },
     }))
     .actions(self => {
             // Work with items
-            function unSerialize(bonds: BondModel[]): IBondEntity[] {
+        async function unSerialize(bonds: BondModel[]): Promise<IBondEntity[]> {
+            await Promise.all(
+                bonds.map(item => Promise.all([
+                    self.domain.currency.find(item.currency.id),
+                    self.domain.issuer.find(item.issuer.id),
+                ])),
+            );
+
                 return bonds.map(item => ({
                     ISIN: item.ISIN,
                     issuer: item.issuer.id,
@@ -70,13 +81,9 @@ const BondDomain = types
                 }));
             }
 
-            function put(...bonds: IBond[]): void {
-                bonds.forEach(bond => self.items.put(bond));
-            }
-
             return {
-                putItem(...bonds: BondModel[]): void {
-                    put(...unSerialize(bonds));
+                async putItem(...bonds: BondModel[]) {
+                    self.put(...await unSerialize(bonds.filter(item => item)));
                 },
 
                 clear() {
@@ -94,9 +101,9 @@ const BondDomain = types
             self.setTotalItems(list.totalItems);
         }
 
-        function handleList(list: BondsList) {
+        async function handleList(list: BondsList) {
             if (list.items) {
-                self.putItem(...list.items);
+                await self.putItem(...list.items);
             }
 
             extractPageInfo(list);
@@ -109,8 +116,7 @@ const BondDomain = types
                 self.setError();
                 self.setLoading(true);
                 try {
-                    const bondsList = await self.domain.client.fetchBonds({...query, page});
-                    handleList(bondsList);
+                    await handleList(await self.domain.client.fetchBonds({...query, page}));
                 } catch (ex) {
                     self.handleError(ex);
                 }
@@ -133,7 +139,7 @@ const BondDomain = types
             if (!self.items.has(ISIN)) {
                 self.setLoading(true);
                 try {
-                    self.putItem(await self.domain.client.fetchBond(ISIN));
+                    await self.putItem(await self.domain.client.fetchBond(ISIN));
                 } catch (ex) {
                     self.handleError(ex);
                 }
@@ -145,7 +151,7 @@ const BondDomain = types
             self.setError();
             self.setLoading(true);
             try {
-                self.putItem(await self.domain.client.saveBond(bond));
+                await self.putItem(await self.domain.client.saveBond(bond));
             } catch (ex) {
                 self.handleError(ex);
             }

@@ -68,7 +68,7 @@ const CurrencyDomain = types
 
             return {
                 putItem(...currencies: CurrencyModel[]): void {
-                    put(...unSerialize(currencies));
+                    put(...unSerialize(currencies.filter(item => item)));
                 },
 
                 clear() {

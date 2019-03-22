@@ -86,12 +86,10 @@ test('currency.find() must fetch currency by id, but only when it does not in co
         Promise.resolve(jsonParser.jsonToResource(currency, CurrencyModel)),
     );
 
-    // @ts-ignore
     t.false(store.currency.items.has(currency.id), 'currency.items should not have item on test start');
 
     await store.currency.find(currency.id);
 
-    // @ts-ignore
     t.true(store.currency.items.has(currency.id), 'currency.items should have item after fetch');
 
     await store.currency.find(currency.id);
@@ -104,12 +102,10 @@ test('currency.save() must create currency', async t => {
         Promise.resolve(jsonParser.jsonToResource(currency, CurrencyModel)),
     );
 
-    // @ts-ignore
     t.false(store.currency.items.has(currency.id), 'currency.items should not have item on test start');
 
     await store.currency.save(currency);
 
-    // @ts-ignore
     t.true(store.currency.items.has(currency.id), 'currency.items should have item after save');
 });
 
