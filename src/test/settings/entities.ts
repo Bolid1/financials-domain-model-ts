@@ -8,26 +8,42 @@ import {
 } from 'bolid1-financials-api-client-ts';
 import {JSONParser} from 'hal-rest-client';
 import bond from '../samples/bond';
+import bonds from '../samples/bonds';
+import currencies from '../samples/currencies';
 import currency from '../samples/currency';
 import issuer from '../samples/issuer';
+import issuers from '../samples/issuers';
 import {makeList} from '../utils/makeLists';
 
 export default {
-    issuer: {
+    bond: {
         fetch: {
-            mockAction: 'fetchIssuers',
-            makeItem: (jsonParser: JSONParser) => makeList(jsonParser, IssuersList, {basePath: '/issuers'}),
+            mockAction: 'fetchBonds',
+            makeItem: (jsonParser: JSONParser) => makeList(jsonParser, BondsList, {basePath: '/bonds'}),
             args: [],
+
+            basePath: '/bonds',
+            data: bonds,
+            model: BondsList,
         },
         find: {
-            mockAction: 'fetchIssuer',
-            makeItem: (jsonParser: JSONParser) => jsonParser.jsonToResource(issuer, IssuerModel),
-            args: [issuer.id],
+            mockAction: 'fetchBond',
+            makeItem: (jsonParser: JSONParser) => jsonParser.jsonToResource(bond, BondModel),
+            args: [bond.ISIN],
+
+            data: bond,
+            id: bond.ISIN,
+            identifier: 'ISIN',
+            model: BondModel,
         },
         save: {
-            mockAction: 'saveIssuer',
-            makeItem: (jsonParser: JSONParser) => jsonParser.jsonToResource(issuer, IssuerModel),
-            args: [issuer],
+            mockAction: 'saveBond',
+            makeItem: (jsonParser: JSONParser) => jsonParser.jsonToResource(bond, BondModel),
+            args: [bond],
+
+            data: bond,
+            id: bond.ISIN,
+            model: BondModel,
         },
     },
     currency: {
@@ -35,33 +51,59 @@ export default {
             mockAction: 'fetchCurrencies',
             makeItem: (jsonParser: JSONParser) => makeList(jsonParser, CurrenciesList, {basePath: '/currencies'}),
             args: [],
+
+            basePath: '/currencies',
+            data: currencies,
+            model: CurrenciesList,
         },
         find: {
             mockAction: 'fetchCurrency',
             makeItem: (jsonParser: JSONParser) => jsonParser.jsonToResource(currency, CurrencyModel),
             args: [currency.id],
+
+            data: currency,
+            id: currency.id,
+            identifier: 'id',
+            model: CurrencyModel,
         },
         save: {
             mockAction: 'saveCurrency',
             makeItem: (jsonParser: JSONParser) => jsonParser.jsonToResource(currency, CurrencyModel),
             args: [currency],
+
+            data: currency,
+            id: currency.id,
+            model: CurrencyModel,
         },
     },
-    bond: {
+    issuer: {
         fetch: {
-            mockAction: 'fetchBonds',
-            makeItem: (jsonParser: JSONParser) => makeList(jsonParser, BondsList, {basePath: '/bonds'}),
+            mockAction: 'fetchIssuers',
+            makeItem: (jsonParser: JSONParser) => makeList(jsonParser, IssuersList, {basePath: '/issuers'}),
             args: [],
+
+            basePath: '/issuers',
+            data: issuers,
+            model: IssuersList,
         },
         find: {
-            mockAction: 'fetchBond',
-            makeItem: (jsonParser: JSONParser) => jsonParser.jsonToResource(bond, BondModel),
-            args: [bond.ISIN],
+            mockAction: 'fetchIssuer',
+            makeItem: (jsonParser: JSONParser) => jsonParser.jsonToResource(issuer, IssuerModel),
+            args: [issuer.id],
+
+            data: issuer,
+            id: issuer.id,
+            identifier: 'id',
+            model: IssuerModel,
         },
         save: {
-            mockAction: 'saveBond',
-            makeItem: (jsonParser: JSONParser) => jsonParser.jsonToResource(bond, BondModel),
-            args: [bond],
+            mockAction: 'saveIssuer',
+            makeItem: (jsonParser: JSONParser) => jsonParser.jsonToResource(issuer, IssuerModel),
+            args: [issuer],
+
+            data: issuer,
+            id: issuer.id,
+            model: IssuerModel,
         },
     },
 };
