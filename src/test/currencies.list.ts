@@ -34,7 +34,6 @@ test('currency.fetch() must parse all items', async t => {
     t.equal(store.currency.items.size, expectedItems.length, `currency.items must contain all items from list`);
     expectedItems.forEach(expected => {
         const identifier = expected.id;
-        // @ts-ignore
         const item = store.currency.items.get(identifier);
         t.notEqual(item, undefined, `currency.items must contain expected with id = ${identifier}`);
 

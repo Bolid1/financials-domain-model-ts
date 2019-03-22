@@ -132,21 +132,28 @@ const BondDomain = types
             },
         }),
     )
-    .actions(self => ({
-        // Work with single item
-        async find(ISIN: string) {
-            self.setError();
-            if (!self.items.has(ISIN)) {
-                self.setLoading(true);
-                try {
-                    await self.putItem(await self.domain.client.fetchBond(ISIN));
-                } catch (ex) {
-                    self.handleError(ex);
-                }
-                self.setLoading(false);
-            }
-        },
+    .actions(self => {
+        const inLoad = [] as string[];
 
+        return {
+            // Work with single item
+            async find(ISIN: string) {
+                self.setError();
+                if (!self.items.has(ISIN) && inLoad.indexOf(ISIN) === -1) {
+                    self.setLoading(true);
+                    inLoad.push(ISIN);
+                    try {
+                        await self.putItem(await self.domain.client.fetchBond(ISIN));
+                    } catch (ex) {
+                        self.handleError(ex);
+                    }
+                    inLoad.filter(i => i !== ISIN);
+                    self.setLoading(false);
+                }
+            },
+        };
+    })
+    .actions(self => ({
         async save(bond: IBond) {
             self.setError();
             self.setLoading(true);

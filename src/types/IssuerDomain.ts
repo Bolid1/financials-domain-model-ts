@@ -120,22 +120,29 @@ const IssuerDomain = types
             },
         }),
     )
-    .actions(self => ({
-        // Work with single item
-        async find(id: number) {
-            self.setError();
-            // @ts-ignore FIXME: change typeof identifierNumber to number
-            if (!self.items.has(id)) {
-                self.setLoading(true);
-                try {
-                    self.putItem(await self.domain.client.fetchIssuer(id));
-                } catch (ex) {
-                    self.handleError(ex);
-                }
-                self.setLoading(false);
-            }
-        },
+    .actions(self => {
+        const inLoad = [] as number[];
 
+        return {
+            // Work with single item
+            async find(id: number) {
+                self.setError();
+                // @ts-ignore FIXME: change typeof identifierNumber to number
+                if (!self.items.has(id) && inLoad.indexOf(id) === -1) {
+                    self.setLoading(true);
+                    inLoad.push(id);
+                    try {
+                        self.putItem(await self.domain.client.fetchIssuer(id));
+                    } catch (ex) {
+                        self.handleError(ex);
+                    }
+                    inLoad.filter(i => i !== id);
+                    self.setLoading(false);
+                }
+            },
+        };
+    })
+    .actions(self => ({
         async save(issuer: IIssuer) {
             self.setError();
             self.setLoading(true);

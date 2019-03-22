@@ -118,21 +118,28 @@ const CurrencyDomain = types
             },
         }),
     )
-    .actions(self => ({
-        // Work with single item
-        async find(id: string) {
-            self.setError();
-            if (!self.items.has(id)) {
-                self.setLoading(true);
-                try {
-                    self.putItem(await self.domain.client.fetchCurrency(id));
-                } catch (ex) {
-                    self.handleError(ex);
-                }
-                self.setLoading(false);
-            }
-        },
+    .actions(self => {
+        const inLoad = [] as string[];
 
+        return {
+            // Work with single item
+            async find(id: string) {
+                self.setError();
+                if (!self.items.has(id) && inLoad.indexOf(id) === -1) {
+                    self.setLoading(true);
+                    inLoad.push(id);
+                    try {
+                        self.putItem(await self.domain.client.fetchCurrency(id));
+                    } catch (ex) {
+                        self.handleError(ex);
+                    }
+                    inLoad.filter(i => i !== id);
+                    self.setLoading(false);
+                }
+            },
+        };
+    })
+    .actions(self => ({
         async save(currency: ICurrency) {
             self.setError();
             self.setLoading(true);
