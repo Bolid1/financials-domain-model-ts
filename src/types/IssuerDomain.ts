@@ -53,6 +53,11 @@ const IssuerDomain = types
             }
         },
     }))
+    .actions(self => ({
+        put(...issuers: IIssuer[]): void {
+            issuers.forEach(issuer => self.items.put(issuer));
+        },
+    }))
     .actions(self => {
             // Work with items
             function unSerialize(issuers: IssuerModel[]): IIssuerEntity[] {
@@ -64,13 +69,16 @@ const IssuerDomain = types
                 }));
             }
 
-            function put(...issuers: IIssuer[]): void {
-                issuers.forEach(issuer => self.items.put(issuer));
-            }
-
             return {
-                putItem(...issuers: IssuerModel[]): void {
-                    put(...unSerialize(issuers.filter(item => item)));
+                async putItem(...issuers: IssuerModel[]) {
+                    self.put(...unSerialize(
+                        await Promise.all(
+                            issuers
+                                .filter(item => item)
+                                .filter((item, index, array) => array.indexOf(item) === index)
+                                .map(item => item.fetch()),
+                        ),
+                    ));
                 },
 
                 clear() {
@@ -88,9 +96,9 @@ const IssuerDomain = types
             self.setTotalItems(list.totalItems);
         }
 
-        function handleList(list: IssuersList) {
+        async function handleList(list: IssuersList) {
             if (list.items) {
-                self.putItem(...list.items);
+                await self.putItem(...list.items);
             }
 
             extractPageInfo(list);
@@ -103,8 +111,7 @@ const IssuerDomain = types
                 self.setError();
                 self.setLoading(true);
                 try {
-                    const issuersList = await self.domain.client.fetchIssuers({...query, page});
-                    handleList(issuersList);
+                    await handleList(await self.domain.client.fetchIssuers({...query, page}));
                 } catch (ex) {
                     self.handleError(ex);
                 }
@@ -121,7 +128,7 @@ const IssuerDomain = types
         }),
     )
     .actions(self => {
-        const inLoad = [] as number[];
+        let inLoad = [] as number[];
 
         return {
             // Work with single item
@@ -132,11 +139,11 @@ const IssuerDomain = types
                     self.setLoading(true);
                     inLoad.push(id);
                     try {
-                        self.putItem(await self.domain.client.fetchIssuer(id));
+                        await self.putItem(await self.domain.client.fetchIssuer(id));
                     } catch (ex) {
                         self.handleError(ex);
                     }
-                    inLoad.filter(i => i !== id);
+                    inLoad = inLoad.filter(i => i !== id);
                     self.setLoading(false);
                 }
             },
@@ -147,7 +154,7 @@ const IssuerDomain = types
             self.setError();
             self.setLoading(true);
             try {
-                self.putItem(await self.domain.client.saveIssuer(issuer));
+                await self.putItem(await self.domain.client.saveIssuer(issuer));
             } catch (ex) {
                 self.handleError(ex);
             }
@@ -158,6 +165,9 @@ const IssuerDomain = types
 
 export default IssuerDomain;
 
+// noinspection JSUnusedGlobalSymbols
 export type IIssuerDomain = Instance<typeof IssuerDomain>;
+// noinspection JSUnusedGlobalSymbols
 export type IIssuerDomainSnapshotIn = SnapshotIn<typeof IssuerDomain>;
+// noinspection JSUnusedGlobalSymbols
 export type IIssuerDomainSnapshotOut = SnapshotOut<typeof IssuerDomain>;

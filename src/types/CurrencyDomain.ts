@@ -53,6 +53,11 @@ const CurrencyDomain = types
             }
         },
     }))
+    .actions(self => ({
+        put(...currencies: ICurrency[]): void {
+            currencies.forEach(currency => self.items.put(currency));
+        },
+    }))
     .actions(self => {
             // Work with items
             function unSerialize(currencies: CurrencyModel[]): ICurrencyEntity[] {
@@ -62,13 +67,16 @@ const CurrencyDomain = types
                 }));
             }
 
-            function put(...currencies: ICurrency[]): void {
-                currencies.forEach(currency => self.items.put(currency));
-            }
-
             return {
-                putItem(...currencies: CurrencyModel[]): void {
-                    put(...unSerialize(currencies.filter(item => item)));
+                async putItem(...currencies: CurrencyModel[]) {
+                    self.put(...unSerialize(
+                        await Promise.all(
+                            currencies
+                                .filter(item => item)
+                                .filter((item, index, array) => array.indexOf(item) === index)
+                                .map(item => item.fetch()),
+                        ),
+                    ));
                 },
 
                 clear() {
@@ -86,9 +94,9 @@ const CurrencyDomain = types
             self.setTotalItems(list.totalItems);
         }
 
-        function handleList(list: CurrenciesList) {
+        async function handleList(list: CurrenciesList) {
             if (list.items) {
-                self.putItem(...list.items);
+                await self.putItem(...list.items);
             }
 
             extractPageInfo(list);
@@ -102,7 +110,7 @@ const CurrencyDomain = types
                 self.setLoading(true);
                 try {
                     const currenciesList = await self.domain.client.fetchCurrencies({...query, page});
-                    handleList(currenciesList);
+                    await handleList(currenciesList);
                 } catch (ex) {
                     self.handleError(ex);
                 }
@@ -119,7 +127,7 @@ const CurrencyDomain = types
         }),
     )
     .actions(self => {
-        const inLoad = [] as string[];
+        let inLoad = [] as string[];
 
         return {
             // Work with single item
@@ -129,11 +137,11 @@ const CurrencyDomain = types
                     self.setLoading(true);
                     inLoad.push(id);
                     try {
-                        self.putItem(await self.domain.client.fetchCurrency(id));
+                        await self.putItem(await self.domain.client.fetchCurrency(id));
                     } catch (ex) {
                         self.handleError(ex);
                     }
-                    inLoad.filter(i => i !== id);
+                    inLoad = inLoad.filter(i => i !== id);
                     self.setLoading(false);
                 }
             },
@@ -144,7 +152,7 @@ const CurrencyDomain = types
             self.setError();
             self.setLoading(true);
             try {
-                self.putItem(await self.domain.client.saveCurrency(currency));
+                await self.putItem(await self.domain.client.saveCurrency(currency));
             } catch (ex) {
                 self.handleError(ex);
             }

@@ -61,10 +61,10 @@ const BondDomain = types
             // Work with items
         async function unSerialize(bonds: BondModel[]): Promise<IBondEntity[]> {
             await Promise.all(
-                bonds.map(item => Promise.all([
-                    self.domain.currency.find(item.currency.id),
-                    self.domain.issuer.find(item.issuer.id),
-                ])),
+                [
+                    self.domain.currency.putItem(...bonds.map(item => item.currency)),
+                    self.domain.issuer.putItem(...bonds.map(item => item.issuer)),
+                ],
             );
 
                 return bonds.map(item => ({
@@ -83,7 +83,14 @@ const BondDomain = types
 
             return {
                 async putItem(...bonds: BondModel[]) {
-                    self.put(...await unSerialize(bonds.filter(item => item)));
+                    self.put(...await unSerialize(
+                        await Promise.all(
+                            bonds
+                                .filter(item => item)
+                                .filter((item, index, array) => array.indexOf(item) === index)
+                                .map(item => item.fetch()),
+                        ),
+                    ));
                 },
 
                 clear() {
@@ -133,7 +140,7 @@ const BondDomain = types
         }),
     )
     .actions(self => {
-        const inLoad = [] as string[];
+        let inLoad = [] as string[];
 
         return {
             // Work with single item
@@ -147,7 +154,7 @@ const BondDomain = types
                     } catch (ex) {
                         self.handleError(ex);
                     }
-                    inLoad.filter(i => i !== ISIN);
+                    inLoad = inLoad.filter(i => i !== ISIN);
                     self.setLoading(false);
                 }
             },
