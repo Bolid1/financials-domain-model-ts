@@ -35,7 +35,7 @@
     "postcoverage": "remap-istanbul -i coverage/coverage.json -o html-report -t html"
   },
   "dependencies": {
-    "bolid1-financials-api-client-ts": "^0.4.2",
+    "bolid1-financials-api-client-ts": "^0.4.3",
     "mobx-state-tree": "^3.11.0"
   },
   "devDependencies": {

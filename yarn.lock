@@ -168,7 +168,7 @@ balanced-match@^1.0.0:
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.0.tgz#89b4d199ab2bee49de164ea02b89ce462d71b767"
   integrity sha1-ibTRmasr7kneFk6gK4nORi1xt2c=
 
-bolid1-financials-api-client-ts@^0.4.2:
+bolid1-financials-api-client-ts@^0.4.3:
   version "0.4.3"
   resolved "https://registry.yarnpkg.com/bolid1-financials-api-client-ts/-/bolid1-financials-api-client-ts-0.4.3.tgz#85211b7573d6d750242295106a2db316727ab220"
   integrity sha512-brNNu+L461jtD70vPq/EGxiFoocYSrf6Gpx7hssZU5xb0e5hqfMp6aXXFlYOjTJD44L5dfqA1UP1jttEXJ3ytg==
