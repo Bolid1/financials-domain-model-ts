@@ -70,7 +70,7 @@ const BondDomain = types
                 return bonds.map(item => ({
                     ISIN: item.ISIN,
                     issuer: item.issuer.id,
-                    currency: item.currency.id,
+                    currency: item.currency.code,
                     name: item.name,
                     offerEnd: item.offerEnd,
                     maturity: item.maturity,
@@ -161,11 +161,22 @@ const BondDomain = types
         };
     })
     .actions(self => ({
-        async save(bond: IBond) {
+        async create(bond: IBond) {
             self.setError();
             self.setLoading(true);
             try {
-                await self.putItem(await self.domain.client.saveBond(bond));
+                await self.putItem(await self.domain.client.createBond(bond));
+            } catch (ex) {
+                self.handleError(ex);
+            }
+            self.setLoading(false);
+        },
+
+        async update(bond: IBond) {
+            self.setError();
+            self.setLoading(true);
+            try {
+                await self.putItem(await self.domain.client.updateBond(bond));
             } catch (ex) {
                 self.handleError(ex);
             }

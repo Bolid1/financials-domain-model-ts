@@ -4,6 +4,6 @@ export default {
             href: '/currencies/RUB',
         },
     },
-    id: 'RUB',
+    code: 'RUB',
     sign: '₽',
 };

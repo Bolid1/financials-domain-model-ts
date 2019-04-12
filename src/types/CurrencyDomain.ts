@@ -62,7 +62,7 @@ const CurrencyDomain = types
             // Work with items
             function unSerialize(currencies: CurrencyModel[]): ICurrencyEntity[] {
                 return currencies.map(item => ({
-                    id: item.id,
+                    code: item.code,
                     sign: item.sign,
                 }));
             }
@@ -148,11 +148,22 @@ const CurrencyDomain = types
         };
     })
     .actions(self => ({
-        async save(currency: ICurrency) {
+        async create(currency: ICurrency) {
             self.setError();
             self.setLoading(true);
             try {
-                await self.putItem(await self.domain.client.saveCurrency(currency));
+                await self.putItem(await self.domain.client.createCurrency(currency));
+            } catch (ex) {
+                self.handleError(ex);
+            }
+            self.setLoading(false);
+        },
+
+        async update(currency: ICurrency) {
+            self.setError();
+            self.setLoading(true);
+            try {
+                await self.putItem(await self.domain.client.updateCurrency(currency));
             } catch (ex) {
                 self.handleError(ex);
             }

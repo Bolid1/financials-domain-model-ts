@@ -36,8 +36,17 @@ export default {
             identifier: 'ISIN',
             model: BondModel,
         },
-        save: {
-            mockAction: 'saveBond',
+        create: {
+            mockAction: 'createBond',
+            makeItem: (jsonParser: JSONParser) => jsonParser.jsonToResource(bond, BondModel),
+            args: [bond],
+
+            data: bond,
+            id: bond.ISIN,
+            model: BondModel,
+        },
+        update: {
+            mockAction: 'updateBond',
             makeItem: (jsonParser: JSONParser) => jsonParser.jsonToResource(bond, BondModel),
             args: [bond],
 
@@ -59,20 +68,29 @@ export default {
         find: {
             mockAction: 'fetchCurrency',
             makeItem: (jsonParser: JSONParser) => jsonParser.jsonToResource(currency, CurrencyModel),
-            args: [currency.id],
+            args: [currency.code],
 
             data: currency,
-            id: currency.id,
-            identifier: 'id',
+            id: currency.code,
+            identifier: 'code',
             model: CurrencyModel,
         },
-        save: {
-            mockAction: 'saveCurrency',
+        create: {
+            mockAction: 'createCurrency',
             makeItem: (jsonParser: JSONParser) => jsonParser.jsonToResource(currency, CurrencyModel),
             args: [currency],
 
             data: currency,
-            id: currency.id,
+            id: currency.code,
+            model: CurrencyModel,
+        },
+        update: {
+            mockAction: 'updateCurrency',
+            makeItem: (jsonParser: JSONParser) => jsonParser.jsonToResource(currency, CurrencyModel),
+            args: [currency],
+
+            data: currency,
+            id: currency.code,
             model: CurrencyModel,
         },
     },

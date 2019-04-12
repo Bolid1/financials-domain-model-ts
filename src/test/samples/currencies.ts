@@ -22,7 +22,7 @@ export default {
                         href: '/currencies/RUB',
                     },
                 },
-                id: 'RUB',
+                code: 'RUB',
                 sign: '₽',
             },
             {
@@ -31,7 +31,7 @@ export default {
                         href: '/currencies/USD',
                     },
                 },
-                id: 'USD',
+                code: 'USD',
                 sign: '$',
             },
         ],

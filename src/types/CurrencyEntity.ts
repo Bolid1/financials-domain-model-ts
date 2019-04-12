@@ -2,7 +2,7 @@ import {Instance, SnapshotIn, SnapshotOut, types} from 'mobx-state-tree';
 
 const CurrencyEntity = types
     .model('CurrencyEntity', {
-        id: types.identifier,
+        code: types.identifier,
         sign: types.maybe(types.string),
     });
 
