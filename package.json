@@ -1,6 +1,6 @@
 {
   "name": "bolid1-financials-domain-model-ts",
-  "version": "0.3.4",
+  "version": "1.0.0",
   "description": "Domain model of financials application connected to API",
   "main": "dist/index.js",
   "typings": "dist/index",
@@ -35,7 +35,7 @@
     "postcoverage": "remap-istanbul -i coverage/coverage.json -o html-report -t html"
   },
   "dependencies": {
-    "bolid1-financials-api-client-ts": "^0.4.3",
+    "bolid1-financials-api-client-ts": "^1.0.1",
     "mobx-state-tree": "^3.11.0"
   },
   "devDependencies": {
